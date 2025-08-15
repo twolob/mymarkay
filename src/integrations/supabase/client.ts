@@ -5,13 +5,45 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://fvduzxhszrozcitbawiy.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2ZHV6eGhzenJvemNpdGJhd2l5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMTU5NDIsImV4cCI6MjA3MDU5MTk0Mn0.j5KBSKrtLEa6ZL4aRNFJZaEJ_OTbIc7wlZ8c1WfSIao";
 
+// Custom storage adapter for environments without localStorage
+const customStorage = {
+  getItem: (key: string) => {
+    try {
+      return localStorage?.getItem(key) || null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      localStorage?.setItem(key, value);
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      localStorage?.removeItem(key);
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
-    persistSession: true,
+    storage: customStorage,
+    persistSession: false, // Disable session persistence in environments without localStorage
     autoRefreshToken: true,
+  }
+});
+
+// Alternative minimal configuration for testing
+export const supabaseMinimal = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
   }
 });
