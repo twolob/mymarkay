@@ -86,13 +86,25 @@ const VendorOnboarding = () => {
     setIsSubmitting(true);
     
     try {
-      // Step 1: Create user account in Supabase Auth
+      // Create user account in Supabase Auth with vendor metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.fullName,
+            is_vendor: true,
+            phone_number: formData.phoneNumber,
+            business_name: formData.businessName,
+            business_type: formData.businessType,
+            business_reg_number: formData.businessRegNumber,
+            street_address: formData.streetAddress,
+            city: formData.city,
+            state: formData.state,
+            postal_code: formData.postalCode,
+            country: formData.country,
+            agree_to_terms: formData.agreeToTerms,
+            read_privacy_policy: formData.readPrivacyPolicy,
           }
         }
       });
@@ -108,57 +120,7 @@ const VendorOnboarding = () => {
         return;
       }
 
-      const userId = authData.user.id;
-
-      // Step 2: Create vendor role for the user
-      try {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: userId,
-            role: 'vendor'
-          });
-
-        if (roleError) {
-          console.error("Error creating vendor role:", roleError);
-          // Continue with vendor creation even if role assignment fails
-        }
-      } catch (roleErr) {
-        console.error("Error creating vendor role:", roleErr);
-        // Continue with vendor creation even if role assignment fails
-      }
-
-      // Step 3: Create vendor profile
-      const vendorData = {
-        user_id: userId,
-        full_name: formData.fullName,
-        email: formData.email,
-        phone: formData.phoneNumber,
-        business_name: formData.businessName,
-        business_type: formData.businessType,
-        registration_number: formData.businessRegNumber,
-        address_street: formData.streetAddress,
-        address_city: formData.city,
-        address_state: formData.state,
-        address_postal_code: formData.postalCode,
-        address_country: formData.country,
-        agree_to_terms: formData.agreeToTerms,
-        read_privacy_policy: formData.readPrivacyPolicy,
-        status: 'pending',
-        is_verified: false,
-        is_active: true
-      };
-
-      const { error: vendorError } = await supabase
-        .from('vendors')
-        .insert(vendorData);
-
-      if (vendorError) {
-        console.error("Registration error:", vendorError);
-        toast.error(`Vendor registration failed: ${vendorError.message}`);
-        return;
-      }
-
+      // Vendor role and profile creation is now handled server-side by the trigger
       toast.success("Registration successful! Please check your email to verify your account.");
       navigate('/login');
       
